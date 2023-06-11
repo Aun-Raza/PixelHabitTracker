@@ -1,7 +1,6 @@
 const ProfileIcon = () => {
   return (
     <svg
-      style={{ 'enable-background': 'new 0 0 24 24' }}
       version='1.1'
       viewBox='0 0 24 24'
       xmlSpace='preserve'

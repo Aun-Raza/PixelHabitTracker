@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import ArrowIcon from '../images/ArrowIcon';
 
 const PixelTracker = () => {
-  const habits = [
+  const [habits, setHabits] = useState([
     {
       id: 1,
       name: 'Eat fruits',
@@ -14,8 +15,9 @@ const PixelTracker = () => {
       color: 'rgb(74 222 128)',
       dates: [100, 101, 102, 103, 104, 105, 106],
     },
-  ];
-  const dates = [
+  ]);
+
+  const [dates, setDates] = useState([
     {
       id: 100,
       month: 'MAY',
@@ -65,7 +67,14 @@ const PixelTracker = () => {
       weekday: 'FRI',
       habits: { 1: true, 2: false },
     },
-  ];
+  ]);
+
+  function ActivateHabitBlock(dateId, habitId) {
+    const datesClone = [...dates];
+    const dateClone = datesClone.find((date) => dateId == date.id);
+    dateClone.habits[habitId] = !dateClone.habits[habitId];
+    setDates(datesClone);
+  }
 
   function HabitDateRow(habit, selected_dates) {
     return (
@@ -78,12 +87,13 @@ const PixelTracker = () => {
               key={date.id}
               className={'cursor-pointer hover:border hover:brightness-50'}
               style={{ backgroundColor: bgColor }}
+              onClick={() => ActivateHabitBlock(date.id, habit.id)}
             ></div>
           );
         })}
         <div className='flex items-center s-2 gap-2 col-span-2 p-2 border'>
           <div className='h-8 w-8 rounded-full bg-red-600' />
-          <p className='font-bold'>Rate</p>
+          <p className='font-bold text-xl'>47%</p>
         </div>
       </>
     );

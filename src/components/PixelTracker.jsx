@@ -8,6 +8,13 @@ import BlurScreen from '../Utils/BlurScreen';
 const PixelTracker = () => {
   const [habits, setHabits] = useState(habitsJSON);
   const [dates, setDates] = useState(datesJSON);
+  const [dateStartEnd, setDateStartEnd] = useState([
+    dates.length - 7,
+    dates.length,
+  ]);
+  const [selectedDates, setSelectedDates] = useState(
+    dates.slice(dateStartEnd[0], dateStartEnd[1])
+  );
 
   function ActivateHabitBlock(dateId, habitId) {
     const datesClone = [...dates];
@@ -16,13 +23,26 @@ const PixelTracker = () => {
     setDates(datesClone);
   }
 
-  function RenderHabitDateRow(habit, selected_dates) {
+  function RenderHabitDateRow(habit) {
     return (
-      <Fragment>
-        <h2 className='col-span-2 pt-1 ps-2 border h-14 break-words'>
+      <Fragment key={habit.id}>
+        <h2
+          className='col-span-2 pt-1 ps-2 border h-14 break-words cursor-pointer hover:underline'
+          onMouseOver={() => {
+            document
+              .getElementById(`${habit.id}-icon`)
+              .classList.remove('hidden');
+          }}
+          onMouseOut={() => {
+            document.getElementById(`${habit.id}-icon`).classList.add('hidden');
+          }}
+        >
           {habit.name}
+          <span id={`${habit.id}-icon`} className='hidden'>
+            🔧
+          </span>
         </h2>
-        {selected_dates.map((date) => {
+        {selectedDates.map((date) => {
           const bgColor = date.habits[habit.id] ? habit.color : '';
           return (
             <div
@@ -33,11 +53,43 @@ const PixelTracker = () => {
             ></div>
           );
         })}
-        <div className='flex items-center s-2 gap-2 col-span-2 p-2 border'>
-          <div className='h-8 w-8 rounded-full bg-redBlock' />
-          <p className='font-bold text-xl'>47%</p>
-        </div>
+        {RenderRateColumn(habit.id)}
       </Fragment>
+    );
+  }
+
+  function RenderRateColumn(habitId) {
+    let activeBlockCount = 0;
+    selectedDates.forEach((date) => {
+      if (date.habits[habitId]) {
+        activeBlockCount++;
+      }
+    });
+
+    const rate = Math.round((activeBlockCount / selectedDates.length) * 100);
+    let bgColor = '';
+    switch (true) {
+      case rate >= 80:
+        bgColor = '#4290d8';
+        break;
+      case rate >= 50:
+        bgColor = '#e2c45a';
+        break;
+      default:
+        bgColor = '#F87171';
+        break;
+    }
+
+    return (
+      <div className='flex items-center s-2 gap-2 col-span-2 p-2 ps-4 border'>
+        <div
+          className={'h-8 w-8 rounded-full'}
+          style={{ backgroundColor: bgColor }}
+        />
+        <p className='font-bold text-xl'>
+          {Math.round((activeBlockCount / selectedDates.length) * 100)}%
+        </p>
+      </div>
     );
   }
 
@@ -70,19 +122,58 @@ const PixelTracker = () => {
     ToggleForm();
   }
 
+  function EditHabit(habit) {
+    const habitsClone = [...habits];
+    const index = habitsClone.findIndex((habitObj) => habitObj.id == habit.id);
+    habitsClone[index] = habit;
+    setHabits(habitsClone);
+  }
+
+  function WeekChangeHandler(direction) {
+    const [dateStart, dateEnd] = dateStartEnd;
+
+    if (direction == 'left') {
+      if (dateStart == 0) {
+        return;
+      }
+
+      const newDates = [dateStart - 7, dateEnd - 7];
+      setDateStartEnd(newDates);
+      setSelectedDates(dates.slice(newDates[0], newDates[1]));
+    } else {
+      if (dateEnd == dates.length) {
+        return;
+      }
+
+      const newDates = [dateStart + 7, dateEnd + 7];
+      setDateStartEnd(newDates);
+      setSelectedDates(dates.slice(newDates[0], newDates[1]));
+    }
+  }
+
   return (
     <Fragment>
       <div className='grid grid-cols-11 mt-11'>
         {/* HEADER: */}
 
         {/* Left Panel */}
-        <div className='flex flex-col items-center gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100 cursor-pointer'>
-          <ArrowIcon angle={90} />
-          <p className='text-md font-bold'>HABITS</p>
+        <div
+          onClick={() => WeekChangeHandler('left')}
+          style={{
+            backgroundColor: dateStartEnd[0] == 0 ? 'rgb(241 245 249)' : '',
+            cursor: dateStartEnd[0] == 0 ? '' : 'pointer',
+          }}
+          className='flex flex-col gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100'
+        >
+          <div className='flex items-center gap-2 text-sm font-bold'>
+            <ArrowIcon angle={90} />
+            <p className='w-min'>Previous Week</p>
+          </div>
+          <p className='text-md font-bold self-center'>Habits</p>
         </div>
 
         {/* Date Columns */}
-        {dates.map(({ month, day, weekday }) => (
+        {selectedDates.map(({ month, day, weekday }) => (
           <div
             key={month + day}
             className='flex flex-col justify-center items-center'
@@ -94,13 +185,24 @@ const PixelTracker = () => {
         ))}
 
         {/* Right Panel */}
-        <div className='flex flex-col items-center gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100 cursor-pointer'>
-          <ArrowIcon angle={-90} />
-          <p className='text-md font-bold'>Rate</p>
+        <div
+          onClick={() => WeekChangeHandler('right')}
+          style={{
+            backgroundColor:
+              dateStartEnd[1] == dates.length ? 'rgb(241 245 249)' : '',
+            cursor: dateStartEnd[1] == dates.length ? '' : 'pointer',
+          }}
+          className='flex flex-col gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100'
+        >
+          <div className='flex items-center justify-end gap-2 text-sm font-bold'>
+            <p className='w-min'>Next Week</p>
+            <ArrowIcon angle={-90} />
+          </div>
+          <p className='text-md font-bold self-center'>Rates</p>
         </div>
 
         {/* BODY: */}
-        {habits.map((habit) => RenderHabitDateRow(habit, dates))}
+        {habits.map((habit) => RenderHabitDateRow(habit, selectedDates))}
       </div>
 
       {/* MISC: */}

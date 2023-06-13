@@ -4,7 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#4290d8',
+        blueBlock: '#4290d8',
+        redBlock: '#F87171',
+        greenBlock: '#4ADE80',
       },
     },
   },

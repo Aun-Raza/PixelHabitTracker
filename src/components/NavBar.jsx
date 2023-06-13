@@ -7,7 +7,7 @@ const NavBar = () => {
     <div className='flex justify-between px-3'>
       {/* Left Side */}
       <div className='flex gap-2 items-center mt-2'>
-        <div className='w-12 h-12 bg-primary' />
+        <div className='w-12 h-12 bg-blueBlock' />
         <div>
           <h1 className='font-bold text-2xl'>Pixel</h1>
           <p className='hidden md:block'>Habit Tracker App</p>

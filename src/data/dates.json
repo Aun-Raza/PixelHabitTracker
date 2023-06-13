@@ -1,0 +1,51 @@
+[
+  {
+    "id": 100,
+    "month": "MAY",
+    "day": 8,
+    "weekday": "SAT",
+    "habits": { "1": true, "2": false }
+  },
+  {
+    "id": 101,
+    "month": "MAY",
+    "day": 9,
+    "weekday": "SUN",
+    "habits": { "1": false, "2": false }
+  },
+  {
+    "id": 102,
+    "month": "MAY",
+    "day": 10,
+    "weekday": "MON",
+    "habits": { "1": true, "2": true }
+  },
+  {
+    "id": 103,
+    "month": "MAY",
+    "day": 11,
+    "weekday": "TUE",
+    "habits": { "1": true, "2": false }
+  },
+  {
+    "id": 104,
+    "month": "MAY",
+    "day": 12,
+    "weekday": "WED",
+    "habits": { "1": false, "2": true }
+  },
+  {
+    "id": 105,
+    "month": "MAY",
+    "day": 13,
+    "weekday": "THU",
+    "habits": { "1": true, "2": false }
+  },
+  {
+    "id": 106,
+    "month": "MAY",
+    "day": 14,
+    "weekday": "FRI",
+    "habits": { "1": true, "2": false }
+  }
+]

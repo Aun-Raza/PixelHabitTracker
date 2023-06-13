@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Eat fruits",
+    "color": "#F87171",
+    "dates": [100, 101, 102, 103, 104, 105, 106]
+  },
+  {
+    "id": 2,
+    "name": "Run outside and sleep",
+    "color": "#4ADE80",
+    "dates": [100, 101, 102, 103, 104, 105, 106]
+  }
+]

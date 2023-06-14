@@ -1,12 +1,13 @@
 import { useState, Fragment } from 'react';
 import ArrowIcon from '../images/ArrowIcon';
 import AddHabitForm from './AddHabitForm';
+import EditHabitForm from './EditHabitForm';
 import habitsJSON from '../data/habits.json';
 import datesJSON from '../data/dates.json';
-import BlurScreen from '../Utils/BlurScreen';
 
 const PixelTracker = () => {
   const [habits, setHabits] = useState(habitsJSON);
+  const [selectedHabit, setSelectedHabit] = useState(habits[0]);
   const [dates, setDates] = useState(datesJSON);
   const [dateStartEnd, setDateStartEnd] = useState([
     dates.length - 7,
@@ -15,6 +16,7 @@ const PixelTracker = () => {
   const [selectedDates, setSelectedDates] = useState(
     dates.slice(dateStartEnd[0], dateStartEnd[1])
   );
+  const [toggle, setToggle] = useState('none');
 
   function ActivateHabitBlock(dateId, habitId) {
     const datesClone = [...dates];
@@ -35,6 +37,10 @@ const PixelTracker = () => {
           }}
           onMouseOut={() => {
             document.getElementById(`${habit.id}-icon`).classList.add('hidden');
+          }}
+          onClick={() => {
+            setSelectedHabit(habit);
+            setToggle('editHabitForm');
           }}
         >
           {habit.name}
@@ -93,21 +99,15 @@ const PixelTracker = () => {
     );
   }
 
-  function ToggleForm() {
-    const blurScreen = document.getElementById('blurScreen');
-    const addHabitForm = document.getElementById('addHabitForm');
-    blurScreen.classList.toggle('hidden');
-    addHabitForm.classList.toggle('hidden');
-  }
-
   function AddHabit(habit) {
-    const habitId = habits.length + 1;
+    const habitId = habits.length == 0 ? 1 : habits[habits.length - 1].id + 1;
+    const habitDates = dates.map((date) => date.id);
 
     const habitObj = {
       id: habitId,
       name: habit.title,
       color: habit.color,
-      dates: habits[0].dates,
+      dates: habitDates,
     };
 
     const habitsClone = [...habits];
@@ -119,7 +119,6 @@ const PixelTracker = () => {
       date.habits[habitId] = false;
     });
     setDates(datesClone);
-    ToggleForm();
   }
 
   function EditHabit(habit) {
@@ -127,6 +126,16 @@ const PixelTracker = () => {
     const index = habitsClone.findIndex((habitObj) => habitObj.id == habit.id);
     habitsClone[index] = habit;
     setHabits(habitsClone);
+  }
+
+  function DeleteHabit(habit) {
+    const habitsClone = habits.filter((habitObj) => habitObj.id !== habit.id);
+    setHabits(habitsClone);
+    const datesClone = [...dates];
+    datesClone.forEach((date) => {
+      delete date.habits[habit.id];
+    });
+    setDates(datesClone);
   }
 
   function WeekChangeHandler(direction) {
@@ -209,13 +218,19 @@ const PixelTracker = () => {
 
       <button
         className='mt-5 bg-blueBlock text-white p-3 rounded-full'
-        onClick={() => ToggleForm()}
+        onClick={() => setToggle('addHabitForm')}
       >
         Add Habit
       </button>
       {/* Absolute Components */}
-      <BlurScreen />
-      <AddHabitForm ToggleForm={ToggleForm} AddHabit={AddHabit} />
+      <AddHabitForm toggle={toggle} setToggle={setToggle} AddHabit={AddHabit} />
+      <EditHabitForm
+        toggle={toggle}
+        setToggle={setToggle}
+        habit={selectedHabit}
+        EditHabit={EditHabit}
+        DeleteHabit={DeleteHabit}
+      />
     </Fragment>
   );
 };

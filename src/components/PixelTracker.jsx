@@ -1,22 +1,101 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import ArrowIcon from '../images/ArrowIcon';
 import AddHabitForm from './AddHabitForm';
 import EditHabitForm from './EditHabitForm';
-import habitsJSON from '../data/habits.json';
 import datesJSON from '../data/dates.json';
+import habitsJSON from '../data/habits.json';
 
 const PixelTracker = () => {
-  const [habits, setHabits] = useState(habitsJSON);
-  const [selectedHabit, setSelectedHabit] = useState(habits[0]);
+  const [habits, setHabits] = useState([]);
+  const [selectedHabit, setSelectedHabit] = useState(habitsJSON);
   const [dates, setDates] = useState(datesJSON);
-  const [dateStartEnd, setDateStartEnd] = useState([
-    dates.length - 7,
-    dates.length,
-  ]);
-  const [selectedDates, setSelectedDates] = useState(
-    dates.slice(dateStartEnd[0], dateStartEnd[1])
-  );
+  const [dateStartEnd, setDateStartEnd] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [toggle, setToggle] = useState('none');
+
+  useEffect(() => {
+    initializeDates();
+  }, []);
+
+  const monthNames = [
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
+  ];
+  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+  function initializeDates() {
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    let updatedDates = [...dates];
+    if (updatedDates.length == 0) {
+      currentDate.setDate(currentDate.getDate() - 6);
+      updatedDates = createDatesForWeek(currentDate);
+    } else {
+      updatedDates = addNewDates(updatedDates, currentDate);
+    }
+
+    setDates(updatedDates);
+    updateSelectedDates(updatedDates);
+  }
+
+  function createDatesForWeek(startDate) {
+    const datesForWeek = [];
+    for (let i = 1; i <= 7; i++) {
+      datesForWeek.push(createDateObject(i, startDate));
+      startDate.setDate(startDate.getDate() + 1);
+    }
+    return datesForWeek;
+  }
+
+  function createDateObject(id, date) {
+    return {
+      id,
+      date: {
+        year: date.getFullYear(),
+        month: monthNames[date.getMonth()],
+        day: date.getDate(),
+        weekday: dayNames[date.getDay()],
+      },
+      habits: {},
+    };
+  }
+
+  function addNewDates(existingDates, currentDate) {
+    const lastDateInfo = existingDates[existingDates.length - 1].date;
+    let datePointer = new Date(
+      lastDateInfo.year,
+      monthNames.indexOf(lastDateInfo.month),
+      lastDateInfo.day + 1
+    );
+    let count = existingDates[existingDates.length - 1].id + 1;
+
+    while (datePointer.getTime() <= currentDate.getTime()) {
+      existingDates.push(createDateObject(count++, datePointer));
+      datePointer.setDate(datePointer.getDate() + 1);
+    }
+    return existingDates;
+  }
+
+  function updateSelectedDates(updatedDates) {
+    const dateRange =
+      updatedDates.length === 7
+        ? [0, 7]
+        : [updatedDates.length - 7, updatedDates.length];
+    setDateStartEnd(dateRange);
+    const updatedSelectedDates = updatedDates.slice(...dateRange);
+    setSelectedDates(updatedSelectedDates);
+  }
 
   function ActivateHabitBlock(dateId, habitId) {
     const datesClone = [...dates];
@@ -138,36 +217,46 @@ const PixelTracker = () => {
     setDates(datesClone);
   }
 
-  function WeekChangeHandler(direction) {
-    const [dateStart, dateEnd] = dateStartEnd;
+  function handleWeekChange(direction) {
+    const [startDate, endDate] = dateStartEnd;
+    let newStart, newEnd, newDates;
 
-    if (direction == 'left') {
-      if (dateStart == 0) {
-        return;
-      }
+    if (direction === 'left') {
+      if (startDate == 0) return;
 
-      const newDates = [dateStart - 7, dateEnd - 7];
-      setDateStartEnd(newDates);
-      setSelectedDates(dates.slice(newDates[0], newDates[1]));
+      newStart = Math.max(0, startDate - 7);
+      newEnd = endDate - 7;
     } else {
-      if (dateEnd == dates.length) {
-        return;
-      }
-
-      const newDates = [dateStart + 7, dateEnd + 7];
-      setDateStartEnd(newDates);
-      setSelectedDates(dates.slice(newDates[0], newDates[1]));
+      if (endDate == dates.length) return;
+      newStart = endDate < 7 ? selectedDates.length : startDate + 7;
+      newEnd = endDate + 7;
     }
+
+    newDates = dates.slice(newStart, newEnd);
+
+    setDateStartEnd([newStart, newEnd]);
+    setSelectedDates(newDates);
+    wrapHabitColumns(newDates.length);
+  }
+
+  function wrapHabitColumns(columnCount) {
+    const pixelGrid = document.getElementById('pixelGrid');
+    const totalColumns = 4 + columnCount;
+    pixelGrid.style.gridTemplateColumns = `repeat(${totalColumns}, 1fr)`;
   }
 
   return (
     <Fragment>
-      <div className='grid grid-cols-11 mt-11'>
+      <div
+        id='pixelGrid'
+        style={{ gridTemplateColumns: 'repeat(11, 1fr)' }}
+        className='grid mt-11'
+      >
         {/* HEADER: */}
 
         {/* Left Panel */}
         <div
-          onClick={() => WeekChangeHandler('left')}
+          onClick={() => handleWeekChange('left')}
           style={{
             backgroundColor: dateStartEnd[0] == 0 ? 'rgb(241 245 249)' : '',
             cursor: dateStartEnd[0] == 0 ? '' : 'pointer',
@@ -182,20 +271,30 @@ const PixelTracker = () => {
         </div>
 
         {/* Date Columns */}
-        {selectedDates.map(({ month, day, weekday }) => (
-          <div
-            key={month + day}
-            className='flex flex-col justify-center items-center'
-          >
-            <p className='font-bold'>{month}</p>
-            <p className='font-bold text-lg text-blueBlock'>{day}</p>
-            <p className='font-bold'>{weekday}</p>
-          </div>
-        ))}
+        {selectedDates.map(({ date: { year, month, day, weekday } }) => {
+          const monthNumber = monthNames.indexOf(month);
+          return (
+            <div
+              key={month + day}
+              className='flex flex-col justify-center items-center'
+              style={{
+                border:
+                  new Date(year, monthNumber, day).toDateString() ==
+                  new Date().toDateString()
+                    ? 'solid 2px black'
+                    : '',
+              }}
+            >
+              <p className='font-bold'>{month}</p>
+              <p className='font-bold text-lg text-blueBlock'>{day}</p>
+              <p className='font-bold'>{weekday}</p>
+            </div>
+          );
+        })}
 
         {/* Right Panel */}
         <div
-          onClick={() => WeekChangeHandler('right')}
+          onClick={() => handleWeekChange('right')}
           style={{
             backgroundColor:
               dateStartEnd[1] == dates.length ? 'rgb(241 245 249)' : '',

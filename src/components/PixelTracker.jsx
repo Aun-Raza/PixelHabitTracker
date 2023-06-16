@@ -5,7 +5,8 @@ import EditHabitForm from './EditHabitForm';
 import datesJSON from '../data/dates.json';
 import habitsJSON from '../data/habits.json';
 
-const PixelTracker = () => {
+// eslint-disable-next-line react/prop-types
+const PixelTracker = ({ onPointChange }) => {
   const [habits, setHabits] = useState([]);
   const [selectedHabit, setSelectedHabit] = useState(habitsJSON);
   const [dates, setDates] = useState(datesJSON);
@@ -100,8 +101,11 @@ const PixelTracker = () => {
   function ActivateHabitBlock(dateId, habitId) {
     const datesClone = [...dates];
     const dateClone = datesClone.find((date) => dateId == date.id);
+
     dateClone.habits[habitId] = !dateClone.habits[habitId];
     setDates(datesClone);
+    const points = dateClone.habits[habitId] ? 1 : -1;
+    onPointChange(points);
   }
 
   function RenderHabitDateRow(habit) {
@@ -154,11 +158,15 @@ const PixelTracker = () => {
     const rate = Math.round((activeBlockCount / selectedDates.length) * 100);
     let bgColor = '';
     switch (true) {
+      case rate == 100:
+        bgColor = '#e2c45a';
+        break;
       case rate >= 80:
-        bgColor = '#4290d8';
+        bgColor = '#4ade80';
         break;
       case rate >= 50:
-        bgColor = '#e2c45a';
+        bgColor = '#4290d8';
+
         break;
       default:
         bgColor = '#F87171';

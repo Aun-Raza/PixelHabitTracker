@@ -1,8 +1,23 @@
 import TrophyIcon from '../images/TrophyIcon';
 import ProfileIcon from '../images/ProfileIcon';
 import ArrowIcon from '../images/ArrowIcon';
+import { useState, useEffect } from 'react';
 
-const NavBar = () => {
+// eslint-disable-next-line react/prop-types
+const NavBar = ({ points }) => {
+  const [pointsValue, setPointsValue] = useState(points);
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    setOpacity(0);
+    const timeoutId = setTimeout(() => {
+      setPointsValue(points);
+      setOpacity(1);
+    }, 500); // duration of the transition
+
+    return () => clearTimeout(timeoutId);
+  }, [points]);
+
   return (
     <div className='flex justify-between px-3'>
       {/* Left Side */}
@@ -17,7 +32,12 @@ const NavBar = () => {
       <div className='flex gap-5'>
         <div className='flex items-center gap-2'>
           <TrophyIcon />
-          <p className='text-xl font-bold'>232</p>
+          <p
+            className='text-xl font-bold'
+            style={{ transition: 'opacity 0.5s', opacity: opacity }}
+          >
+            {pointsValue}
+          </p>
         </div>
         <div className='flex items-center gap-2'>
           <ProfileIcon />

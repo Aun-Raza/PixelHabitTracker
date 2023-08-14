@@ -8,7 +8,6 @@ function App() {
 
   function handlePointChange(newPoints) {
     const totalPoints = points + newPoints;
-    console.log(totalPoints);
     setPoints(totalPoints);
   }
 

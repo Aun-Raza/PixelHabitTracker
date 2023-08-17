@@ -1,11 +1,5 @@
 import mongoose, { Schema, model } from 'mongoose';
-
-interface IHabit {
-  name: string;
-  color: string;
-  owner: Schema.Types.ObjectId;
-  dates: Schema.Types.ObjectId[];
-}
+import { IHabit } from '../types';
 
 const HabitSchema = new Schema<IHabit>(
   {

@@ -1,13 +1,10 @@
 import mongoose, { Schema, model } from 'mongoose';
-
-interface IDate {
-  date: Date;
-  habit: Schema.Types.ObjectId;
-}
+import { IDate } from '../types';
 
 const DateSchema = new Schema<IDate>({
-  date: { type: Date, required: true },
+  date: { type: String, required: true },
   habit: { type: Schema.Types.ObjectId, ref: 'Habit', required: true },
+  checked: { type: Schema.Types.Boolean, required: true, default: false },
 });
 
 const DateModel = model<IDate>('Date', DateSchema);

@@ -1,12 +1,15 @@
 import TrophyIcon from '../images/TrophyIcon';
 import ProfileIcon from '../images/ProfileIcon';
-import ArrowIcon from '../images/ArrowIcon';
 import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../features/user';
 
 // eslint-disable-next-line react/prop-types
 const NavBar = ({ points }) => {
   const [pointsValue, setPointsValue] = useState(points);
   const [opacity, setOpacity] = useState(1);
+  const user = useSelector((state) => state.user.value);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setOpacity(0);
@@ -17,6 +20,10 @@ const NavBar = ({ points }) => {
 
     return () => clearTimeout(timeoutId);
   }, [points]);
+
+  const onLogout = () => {
+    dispatch(logout({}));
+  };
 
   return (
     <div className='flex justify-between px-3'>
@@ -29,22 +36,30 @@ const NavBar = ({ points }) => {
         </div>
       </div>
       {/* Right Size  */}
-      <div className='flex gap-5'>
-        <div className='flex items-center gap-2'>
-          <TrophyIcon />
-          <p
-            className='text-xl font-bold'
-            style={{ transition: 'opacity 0.5s', opacity: opacity }}
+      {user?.username && (
+        <div className='flex gap-5'>
+          <div className='flex items-center gap-2'>
+            <TrophyIcon />
+            <p
+              className='text-xl font-bold'
+              style={{ transition: 'opacity 0.5s', opacity: opacity }}
+            >
+              {pointsValue}
+            </p>
+          </div>
+          <div className='flex items-center gap-2'>
+            <ProfileIcon />
+            <p className='font-bold text-sm'>{user.username}</p>
+          </div>
+          <button
+            type='button'
+            onClick={onLogout}
+            className='bg-blue-400 px-3 py-1 text-white font-mono rounded-md'
           >
-            {pointsValue}
-          </p>
+            Logout
+          </button>
         </div>
-        <div className='flex items-center gap-2'>
-          <ProfileIcon />
-          <p className='text-xl font-bold'>User</p>
-          <ArrowIcon />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
-import './App.css';
 import NavBar from './components/NavBar';
 import PixelTracker from './components/PixelTracker';
 import { useState } from 'react';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const [points, setPoints] = useState(0);
@@ -14,7 +14,9 @@ function App() {
   return (
     <div className='App container mx-auto'>
       <NavBar points={points} />
-      <PixelTracker onPointChange={handlePointChange} />
+      <ProtectedRoute>
+        <PixelTracker onPointChange={handlePointChange} />
+      </ProtectedRoute>
     </div>
   );
 }

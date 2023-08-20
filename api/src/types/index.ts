@@ -13,10 +13,10 @@ export interface IHabit {
   name: string;
   color: string;
   owner: mongoose.Types.ObjectId;
-  dates: mongoose.Types.ObjectId[];
+  days: mongoose.Types.ObjectId[];
 }
 
-export interface IDate {
+export interface IDay {
   _id?: mongoose.Types.ObjectId;
   date: string;
   habit: mongoose.Types.ObjectId;

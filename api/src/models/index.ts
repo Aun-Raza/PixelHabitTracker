@@ -1,5 +1,5 @@
 import UserModel from './user';
 import HabitModel from './habit';
-import DateModel from './date';
+import DayModel from './day';
 
-export { UserModel, HabitModel, DateModel };
+export { UserModel, HabitModel, DayModel };

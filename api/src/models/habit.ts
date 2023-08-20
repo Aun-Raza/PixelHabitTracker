@@ -6,7 +6,7 @@ const HabitSchema = new Schema<IHabit>(
     name: { type: String, required: true },
     color: { type: String, required: true },
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    dates: { type: [Schema.Types.ObjectId], ref: 'Date', required: true },
+    days: { type: [Schema.Types.ObjectId], ref: 'Day', required: true },
   },
   { timestamps: true }
 );

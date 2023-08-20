@@ -1,6 +1,8 @@
 import { gql } from 'apollo-server';
 
 const typeDefs = gql`
+  scalar Date
+
   input loginInput {
     username: String!
     password: String!
@@ -26,16 +28,28 @@ const typeDefs = gql`
     name: String!
     color: String!
     owner: User!
+    days: [Day!]
+  }
+
+  type Day {
+    _id: String!
+    date: Date!
+    habit: Habit!
+    checked: Boolean!
   }
 
   type Query {
     users: [User!]!
     login(input: loginInput): UserWithToken
+    tomorrow: Date!
+    yesterday: Date!
   }
 
   type Mutation {
     register(input: loginInput): UserWithToken
     addHabit(name: String!, color: String!): Habit
+    deleteHabit(habitId: String!): String
+    addNDays(habitId: String!, num: Int!): String
   }
 `;
 

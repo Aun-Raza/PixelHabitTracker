@@ -1,12 +1,13 @@
-import { UserModel, HabitModel } from '../models';
+import { UserModel, HabitModel, DayModel } from '../models';
 import _ from 'lodash';
 import { connectToDb } from '../utils/database';
-import { IContextWithUser, IHabit, IUser } from '../types';
-import { GraphQLError } from 'graphql';
+import { IContextWithUser, IDay, IHabit, IUser } from '../types';
+import { GraphQLError, GraphQLScalarType } from 'graphql';
+import { Kind } from 'graphql/language';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
-import { Document } from 'mongoose';
+import dayjs from 'dayjs';
 dotenv.config();
 const saltRounds = 5;
 const salt = bcrypt.genSaltSync(saltRounds);
@@ -46,6 +47,15 @@ const resolvers = {
           token,
         }
       );
+    },
+
+    tomorrow: (_: any) => {
+      const formattedDate = dayjs(Date.now());
+      return formattedDate.add(1, 'day');
+    },
+    yesterday: (_: any) => {
+      const formattedDate = dayjs(Date.now());
+      return formattedDate.subtract(1, 'day');
     },
   },
 
@@ -87,6 +97,7 @@ const resolvers = {
       args: { name: string; color: string },
       { user }: IContextWithUser
     ) => {
+      await connectToDb();
       const { name, color } = args;
 
       const habitDoc = await HabitModel.create({
@@ -101,10 +112,91 @@ const resolvers = {
       await userDoc?.save();
       return _.pick(habitDoc, ['_id', 'name', 'color', 'owner']);
     },
+
+    deleteHabit: async (
+      parent: any,
+      { habitId }: { habitId: string },
+      { user }: IContextWithUser
+    ) => {
+      await connectToDb();
+
+      const habitDoc = await HabitModel.findById(habitId);
+
+      if (!habitDoc) {
+        throw new GraphQLError(`habit does not exist`);
+      }
+
+      await HabitModel.findByIdAndDelete(habitDoc._id);
+      await DayModel.deleteMany({ habit: habitDoc._id });
+
+      const userDoc = await UserModel.findById(user._id);
+      userDoc?.habits.filter((habit) => habit._id !== habitDoc._id);
+      await userDoc?.save();
+
+      return 'Success';
+    },
+
+    addNDays: async (
+      parent: any,
+      { habitId, num }: { habitId: string; num: number }
+    ) => {
+      await connectToDb();
+      const habitDoc = await HabitModel.findById(habitId);
+
+      if (!habitDoc) {
+        throw new GraphQLError(`habit need to exist to add days`);
+      }
+
+      const dayCurrent = dayjs(Date.now());
+      const dayLastWeek = dayjs(Date.now()).subtract(num - 1, 'day');
+
+      const foundHabitDay = await DayModel.findOne({
+        $or: [
+          { date: dayCurrent.format('MM-DD-YYYY'), habit: habitDoc._id },
+          { date: dayLastWeek.format('MM-DD-YYYY'), habit: habitDoc._id },
+        ],
+      });
+
+      if (foundHabitDay) {
+        throw new GraphQLError(`cannot duplicate habit days`);
+      }
+
+      let currentDay = dayLastWeek;
+      while (currentDay.isBefore(dayCurrent) || currentDay.isSame(dayCurrent)) {
+        const dayDoc = await DayModel.create({
+          date: currentDay.format('MM-DD-YYYY'),
+          habit: habitId,
+          checked: false,
+        });
+        habitDoc.days.push(dayDoc._id);
+        await habitDoc.save();
+        currentDay = currentDay.add(1, 'day');
+      }
+
+      return 'Success';
+    },
   },
+
+  Date: new GraphQLScalarType({
+    name: 'Date',
+    description: 'Custom description for the date scalar',
+    parseValue(value: any) {
+      return dayjs(value);
+    },
+    serialize(value: any) {
+      return dayjs(value).format('MM-DD-YYYY');
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING) {
+        return dayjs(ast.value);
+      }
+      return null;
+    },
+  }),
 
   User: {
     habits: async (user: IUser) => {
+      await connectToDb();
       const freshUser = await UserModel.findById(user._id).populate('habits');
       if (!freshUser) return null;
       return freshUser.habits;
@@ -113,6 +205,7 @@ const resolvers = {
 
   UserWithToken: {
     habits: async (user: IUser) => {
+      await connectToDb();
       const freshUser = await UserModel.findById(user._id).populate('habits');
       if (!freshUser) return null;
       return freshUser.habits;
@@ -121,9 +214,25 @@ const resolvers = {
 
   Habit: {
     owner: async (habit: IHabit) => {
+      await connectToDb();
       const freshHabit = await HabitModel.findById(habit).populate('owner');
       if (!freshHabit) return null;
       return freshHabit.owner;
+    },
+    days: async (habit: IHabit) => {
+      await connectToDb();
+      const freshHabit = await HabitModel.findById(habit).populate('days');
+      if (!freshHabit) return null;
+      return freshHabit.days;
+    },
+  },
+
+  Day: {
+    habit: async (day: IDay) => {
+      await connectToDb();
+      const freshDay = await DayModel.findById(day._id).populate('habit');
+      if (!freshDay) return null;
+      return freshDay.habit;
     },
   },
 };

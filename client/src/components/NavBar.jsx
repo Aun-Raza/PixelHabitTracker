@@ -22,6 +22,7 @@ const NavBar = ({ points }) => {
   }, [points]);
 
   const onLogout = () => {
+    localStorage.setItem('Authorization', '');
     dispatch(logout({}));
   };
 

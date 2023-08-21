@@ -1,19 +1,34 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../features/user';
+import { useMutation } from '@apollo/client';
+import { LOGIN_USER } from '../graphql/query';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [usernameState, setUsername] = useState('');
+  const [passwordState, setPassword] = useState('');
+  const [loginGraphQL, { data }] = useMutation(LOGIN_USER);
   const dispatch = useDispatch();
 
-  const handleSubmit = (ev) => {
+  async function handleSubmit(ev) {
     ev.preventDefault();
 
-    console.log(username);
+    try {
+      await loginGraphQL({
+        variables: {
+          input: { username: usernameState, password: passwordState },
+        },
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
 
-    dispatch(login({ username, point: 0 }));
-  };
+  if (data) {
+    const { username, points, token } = data.login;
+    localStorage.setItem('Authorization', token);
+    dispatch(login({ username, points }));
+  }
 
   return (
     <div className='flex min-h-full flex-col justify-center p-6 lg:px-8'>
@@ -36,7 +51,7 @@ const Login = () => {
                 id='username'
                 name='username'
                 type='username'
-                value={username}
+                value={usernameState}
                 onChange={(ev) => setUsername(ev.target.value)}
                 autoComplete='username'
                 required
@@ -59,7 +74,7 @@ const Login = () => {
                 id='password'
                 name='password'
                 type='password'
-                value={password}
+                value={passwordState}
                 onChange={(ev) => setPassword(ev.target.value)}
                 autoComplete='current-password'
                 required

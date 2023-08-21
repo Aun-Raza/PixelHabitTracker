@@ -23,32 +23,6 @@ const resolvers = {
       );
     },
 
-    login: async (
-      parent: any,
-      args: { input: { username: string; password: string } }
-    ) => {
-      await connectToDb();
-      const { username, password } = args.input;
-      const foundUser = await UserModel.findOne({ username });
-
-      if (!foundUser) throw new GraphQLError(`Could not find ${username})`);
-
-      if (!bcrypt.compareSync(password, foundUser.hash))
-        throw new GraphQLError(`Passwords do not match`);
-
-      const token = jwt.sign(
-        { _id: foundUser._id, username },
-        process.env.JWT_SECRET || ''
-      );
-
-      return Object.assign(
-        _.pick(foundUser, ['_id', 'username', 'points', 'habits']),
-        {
-          token,
-        }
-      );
-    },
-
     tomorrow: (_: any) => {
       const formattedDate = dayjs(Date.now());
       return formattedDate.add(1, 'day');
@@ -90,6 +64,32 @@ const resolvers = {
       return Object.assign(_.pick(userDoc, ['_id', 'username', 'points']), {
         token,
       });
+    },
+
+    login: async (
+      parent: any,
+      args: { input: { username: string; password: string } }
+    ) => {
+      await connectToDb();
+      const { username, password } = args.input;
+      const foundUser = await UserModel.findOne({ username });
+
+      if (!foundUser) throw new GraphQLError(`Could not find ${username})`);
+
+      if (!bcrypt.compareSync(password, foundUser.hash))
+        throw new GraphQLError(`Passwords do not match`);
+
+      const token = jwt.sign(
+        { _id: foundUser._id, username },
+        process.env.JWT_SECRET || ''
+      );
+
+      return Object.assign(
+        _.pick(foundUser, ['_id', 'username', 'points', 'habits']),
+        {
+          token,
+        }
+      );
     },
 
     addHabit: async (

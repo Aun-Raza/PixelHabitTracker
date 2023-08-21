@@ -4,6 +4,8 @@ import AddHabitForm from './AddHabitForm';
 import EditHabitForm from './EditHabitForm';
 import datesJSON from '../data/dates.json';
 import habitsJSON from '../data/habits.json';
+import { useQuery } from '@apollo/client';
+import { QUERY_ALL_USERS } from '../graphql/query';
 
 // eslint-disable-next-line react/prop-types
 const PixelTracker = ({ onPointChange }) => {
@@ -13,6 +15,15 @@ const PixelTracker = ({ onPointChange }) => {
   const [dateStartEnd, setDateStartEnd] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [toggle, setToggle] = useState('none');
+  const { data, error } = useQuery(QUERY_ALL_USERS);
+
+  if (data) {
+    console.log(data);
+  }
+
+  if (error) {
+    console.log(error.message);
+  }
 
   useEffect(() => {
     initializeDates();

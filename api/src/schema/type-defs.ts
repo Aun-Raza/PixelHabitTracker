@@ -40,12 +40,12 @@ const typeDefs = gql`
 
   type Query {
     users: [User!]!
-    login(input: loginInput): UserWithToken
     tomorrow: Date!
     yesterday: Date!
   }
 
   type Mutation {
+    login(input: loginInput): UserWithToken
     register(input: loginInput): UserWithToken
     addHabit(name: String!, color: String!): Habit
     deleteHabit(habitId: String!): String

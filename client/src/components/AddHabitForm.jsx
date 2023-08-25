@@ -4,7 +4,7 @@ import BlurScreen from '../Utils/BlurScreen';
 // eslint-disable-next-line react/prop-types
 const AddHabitForm = ({ toggle, setToggle, AddHabit }) => {
   const [habit, setHabit] = useState({
-    title: '',
+    name: '',
     color: '#F87171',
   });
 
@@ -24,7 +24,7 @@ const AddHabitForm = ({ toggle, setToggle, AddHabit }) => {
             e.preventDefault();
             setToggle('none');
             setHabit({
-              title: '',
+              name: '',
               color: '#F87171',
             });
             AddHabit(habit);
@@ -42,13 +42,13 @@ const AddHabitForm = ({ toggle, setToggle, AddHabit }) => {
             <input
               className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
               id='habit'
-              name='title'
+              name='name'
               type='text'
               placeholder='ex. Run outside'
               minLength={5}
               maxLength={30}
               required
-              value={habit.title}
+              value={habit.name}
               onChange={handleHabitChange}
             />
           </div>

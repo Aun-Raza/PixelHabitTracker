@@ -27,7 +27,7 @@ const NavBar = ({ points }) => {
   };
 
   return (
-    <div className='flex justify-between px-3'>
+    <div className='flex justify-between shadow-md px-5 pt-1 pb-2'>
       {/* Left Side */}
       <div className='flex gap-2 items-center mt-2'>
         <div className='w-12 h-12 bg-blueBlock' />
@@ -38,7 +38,7 @@ const NavBar = ({ points }) => {
       </div>
       {/* Right Size  */}
       {user?.username && (
-        <div className='flex gap-5'>
+        <div className='flex gap-5 py-2'>
           <div className='flex items-center gap-2'>
             <TrophyIcon />
             <p
@@ -55,7 +55,7 @@ const NavBar = ({ points }) => {
           <button
             type='button'
             onClick={onLogout}
-            className='bg-blue-400 px-3 py-1 text-white font-mono rounded-md'
+            className='bg-blue-400 px-3 text-white font-mono rounded-md'
           >
             Logout
           </button>

@@ -1,7 +1,7 @@
 import NavBar from './components/NavBar';
-import PixelTracker from './components/PixelTracker';
+import PixelTracker from './pages/PixelTracker';
 import { useEffect, useState } from 'react';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './Utils/ProtectedRoute';
 import jwt_decode from 'jwt-decode';
 import { useDispatch } from 'react-redux';
 import { login } from './features/user';
@@ -26,7 +26,7 @@ function App() {
   }
 
   return (
-    <div className='App container mx-auto'>
+    <div className='App mx-auto'>
       <NavBar points={points} />
       <ProtectedRoute>
         <PixelTracker onPointChange={handlePointChange} />

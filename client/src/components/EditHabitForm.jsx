@@ -11,19 +11,19 @@ const EditHabitForm = ({
   DeleteHabit,
 }) => {
   const [updatedHabit, setUpdatedHabit] = useState({
-    id: habit.id,
-    name: habit.name,
-    color: habit.color,
-    dates: habit.dates,
+    _id: '',
+    name: '',
+    color: '',
   });
 
   useEffect(() => {
-    setUpdatedHabit({
-      id: habit.id,
-      name: habit.name,
-      color: habit.color,
-      dates: habit.dates,
-    });
+    if (habit) {
+      setUpdatedHabit({
+        _id: habit._id,
+        name: habit.name,
+        color: habit.color,
+      });
+    }
   }, [habit]);
 
   const handleHabitChange = (e) => {

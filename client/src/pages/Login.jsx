@@ -2,32 +2,48 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../features/user';
 import { useMutation } from '@apollo/client';
-import { LOGIN_USER } from '../graphql/query';
+import { LOGIN_USER, REGISTER_USER } from '../graphql/query';
 
 const Login = () => {
   const [usernameState, setUsername] = useState('');
   const [passwordState, setPassword] = useState('');
-  const [loginGraphQL, { data }] = useMutation(LOGIN_USER);
+  const [loginGraphQL, { data: loginData }] = useMutation(LOGIN_USER);
+  const [registerGraphQL, { data: registerData }] = useMutation(REGISTER_USER);
   const dispatch = useDispatch();
+  const [mode, setMode] = useState('Login');
 
   async function handleSubmit(ev) {
     ev.preventDefault();
 
     try {
-      await loginGraphQL({
-        variables: {
-          input: { username: usernameState, password: passwordState },
-        },
-      });
+      if (mode === 'Login') {
+        await loginGraphQL({
+          variables: {
+            input: { username: usernameState, password: passwordState },
+          },
+        });
+      } else {
+        await registerGraphQL({
+          variables: {
+            input: { username: usernameState, password: passwordState },
+          },
+        });
+      }
     } catch (error) {
       console.log(error.message);
     }
   }
 
-  if (data) {
-    const { username, points, token } = data.login;
+  if (loginData) {
+    const { username, points, token, habits } = loginData.login;
     localStorage.setItem('Authorization', token);
-    dispatch(login({ username, points }));
+    dispatch(login({ username, points, habits }));
+  }
+
+  if (registerData) {
+    const { username, points, token, habits } = registerData.register;
+    localStorage.setItem('Authorization', token);
+    dispatch(login({ username, points, habits }));
   }
 
   return (
@@ -88,9 +104,31 @@ const Login = () => {
               type='submit'
               className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
             >
-              Login
+              {mode}
             </button>
           </div>
+          {mode === 'Login' && (
+            <p
+              className='text-sm cursor-pointer'
+              onClick={() => setMode('Register')}
+            >
+              Don&apos;t have an account?{' '}
+              <span className='text-lg font-mono uppercase underline text-blue-800'>
+                Register
+              </span>
+            </p>
+          )}
+          {mode === 'Register' && (
+            <p
+              className='text-sm cursor-pointer'
+              onClick={() => setMode('Login')}
+            >
+              Already have an account?{' '}
+              <span className='text-lg font-mono uppercase underline text-blue-800'>
+                Login
+              </span>
+            </p>
+          )}
         </form>
       </div>
     </div>

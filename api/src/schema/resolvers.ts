@@ -1,13 +1,22 @@
 import { UserModel, HabitModel, DayModel } from '../models';
 import _ from 'lodash';
 import { connectToDb } from '../utils/database';
-import { IContextWithUser, IDay, IHabit, IUser } from '../types';
+import {
+  IContextWithUser,
+  IDay,
+  IHabit,
+  IHabitWithDays,
+  IUser,
+} from '../types';
 import { GraphQLError, GraphQLScalarType } from 'graphql';
 import { Kind } from 'graphql/language';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { updateHabitDays } from './helper';
+dayjs.extend(customParseFormat);
 dotenv.config();
 const saltRounds = 5;
 const salt = bcrypt.genSaltSync(saltRounds);
@@ -23,13 +32,17 @@ const resolvers = {
       );
     },
 
-    tomorrow: (_: any) => {
-      const formattedDate = dayjs(Date.now());
-      return formattedDate.add(1, 'day');
-    },
-    yesterday: (_: any) => {
-      const formattedDate = dayjs(Date.now());
-      return formattedDate.subtract(1, 'day');
+    habits: async (parent: any, args: null, { user }: IContextWithUser) => {
+      await connectToDb();
+      const allHabits = await HabitModel.find({ owner: user._id });
+
+      _.forEach(allHabits, async (habit) => {
+        const habitWithDays = (await habit.populate('days')) as IHabitWithDays;
+        await updateHabitDays(habitWithDays);
+      });
+
+      const allUpdatedHabits = await HabitModel.find({ owner: user._id });
+      return allUpdatedHabits;
     },
   },
 
@@ -61,9 +74,12 @@ const resolvers = {
         process.env.JWT_SECRET || ''
       );
 
-      return Object.assign(_.pick(userDoc, ['_id', 'username', 'points']), {
-        token,
-      });
+      return Object.assign(
+        _.pick(userDoc, ['_id', 'username', 'points', 'habits']),
+        {
+          token,
+        }
+      );
     },
 
     login: async (
@@ -107,9 +123,42 @@ const resolvers = {
         dates: [],
       });
 
+      const dayDoc = await DayModel.create({
+        date: dayjs().format('MM-DD-YYYY'),
+        habit: habitDoc._id,
+        checked: false,
+      });
+
+      habitDoc.days.push(dayDoc._id);
+      await habitDoc.save();
+
       const userDoc = await UserModel.findById(user._id);
       userDoc?.habits.push(habitDoc._id);
       await userDoc?.save();
+      return _.pick(habitDoc, ['_id', 'name', 'color', 'owner']);
+    },
+
+    editHabit: async (
+      parent: any,
+      {
+        habitId,
+        name,
+        color,
+      }: { habitId: string; name: string; color: string },
+      { user }: IContextWithUser
+    ) => {
+      await connectToDb();
+
+      const habitDoc = await HabitModel.findById(habitId);
+
+      if (!habitDoc) {
+        throw new GraphQLError(`habit does not exist`);
+      }
+
+      habitDoc.name = name;
+      habitDoc.color = color;
+      await habitDoc.save();
+
       return _.pick(habitDoc, ['_id', 'name', 'color', 'owner']);
     },
 
@@ -133,47 +182,26 @@ const resolvers = {
       userDoc?.habits.filter((habit) => habit._id !== habitDoc._id);
       await userDoc?.save();
 
-      return 'Success';
+      return _.pick(habitDoc, ['_id', 'name', 'color', 'owner']);
     },
 
-    addNDays: async (
+    checkHabitDay: async (
       parent: any,
-      { habitId, num }: { habitId: string; num: number }
+      { dayId }: { dayId: string },
+      { user }: IContextWithUser
     ) => {
       await connectToDb();
-      const habitDoc = await HabitModel.findById(habitId);
 
-      if (!habitDoc) {
-        throw new GraphQLError(`habit need to exist to add days`);
+      const dayDoc = await DayModel.findById(dayId);
+
+      if (!dayDoc) {
+        throw new GraphQLError(`day does not exist`);
       }
 
-      const dayCurrent = dayjs(Date.now());
-      const dayLastWeek = dayjs(Date.now()).subtract(num - 1, 'day');
+      dayDoc.checked = !dayDoc.checked;
+      await dayDoc.save();
 
-      const foundHabitDay = await DayModel.findOne({
-        $or: [
-          { date: dayCurrent.format('MM-DD-YYYY'), habit: habitDoc._id },
-          { date: dayLastWeek.format('MM-DD-YYYY'), habit: habitDoc._id },
-        ],
-      });
-
-      if (foundHabitDay) {
-        throw new GraphQLError(`cannot duplicate habit days`);
-      }
-
-      let currentDay = dayLastWeek;
-      while (currentDay.isBefore(dayCurrent) || currentDay.isSame(dayCurrent)) {
-        const dayDoc = await DayModel.create({
-          date: currentDay.format('MM-DD-YYYY'),
-          habit: habitId,
-          checked: false,
-        });
-        habitDoc.days.push(dayDoc._id);
-        await habitDoc.save();
-        currentDay = currentDay.add(1, 'day');
-      }
-
-      return 'Success';
+      return _.pick(dayDoc, ['_id', 'date', 'habit', 'checked']);
     },
   },
 

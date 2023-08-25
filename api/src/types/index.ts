@@ -16,6 +16,14 @@ export interface IHabit {
   days: mongoose.Types.ObjectId[];
 }
 
+export interface IHabitWithDays {
+  _id?: mongoose.Types.ObjectId;
+  name: string;
+  color: string;
+  owner: mongoose.Types.ObjectId;
+  days: IDay[];
+}
+
 export interface IDay {
   _id?: mongoose.Types.ObjectId;
   date: string;

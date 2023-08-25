@@ -17,7 +17,15 @@ query loginUser($input: loginInput) {
     username
     points
     token
-    
+    habits {
+      _id
+      name
+      days {
+        _id
+        date
+        checked
+      }
+    }
   }
 }
 

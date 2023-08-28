@@ -15,18 +15,19 @@ import { daysOfWeek, months } from '../Utils/enum';
 import Cell from '../components/Cell';
 import AddHabitForm from '../components/AddHabitForm';
 import EditHabitForm from '../components/EditHabitForm';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+ChartJS.register(ArcElement, Tooltip, Legend);
+import { Doughnut } from 'react-chartjs-2';
+import ArrowIcon from '../images/ArrowIcon';
 
 const PixelTracker = () => {
-  const [habits, setHabits] = useState([]);
   const [dates, setDates] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
-  const { data: habitData } = useQuery(QUERY_ALL_HABITS);
-  const [addHabitMutation, { data: newHabit }] = useMutation(ADD_HABIT);
-  const [editHabitMutation, { data: editedHabit }] = useMutation(EDIT_HABIT);
-  const [checkHabitDayMutation, { data: checkHabitDayData }] =
-    useMutation(CHECK_DAY);
-  const [deleteHabitMutation, { data: deletedHabit }] =
-    useMutation(DELETE_HABIT);
+  const { data: query, refetch } = useQuery(QUERY_ALL_HABITS);
+  const [addHabit, { data: newHabit }] = useMutation(ADD_HABIT);
+  const [editHabit, { data: editedHabit }] = useMutation(EDIT_HABIT);
+  const [checkHabitDay, { data: habitDay }] = useMutation(CHECK_DAY);
+  const [deleteHabit, { data: deletedHabit }] = useMutation(DELETE_HABIT);
   const [toggle, setToggle] = useState('none');
   const [selectedHabit, setSelectedHabit] = useState(null);
 
@@ -44,6 +45,22 @@ const PixelTracker = () => {
     }
   }
 
+  function checkPossibleWeekChange(direction) {
+    if (direction === 'left') {
+      const lastWeek = dayjs(selectedDates[0], 'MM-DD-YYYY').subtract(1, 'day');
+      if (dates[lastWeek.format('MM-DD-YYYY')]) {
+        return true;
+      }
+    } else if (direction === 'right') {
+      const nextWeek = dayjs(selectedDates[0], 'MM-DD-YYYY').add(1, 'day');
+      if (dates[nextWeek.format('MM-DD-YYYY')]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   function populateSelectedDates(end) {
     const selectedDatesClone = [];
     let current = end.subtract(6, 'day');
@@ -55,109 +72,74 @@ const PixelTracker = () => {
     setSelectedDates(() => selectedDatesClone);
   }
 
-  useEffect(() => populateSelectedDates(dayjs()), []);
+  useEffect(() => {
+    const init = async () => {
+      await refetch();
+      populateSelectedDates(dayjs());
+    };
+    init();
+  }, []);
 
-  function populateDates(habits) {
-    const dates = {};
-    _.forEach(habits, (habit) => {
-      _.forEach(habit.days, (day) => {
-        if (day.date in dates) {
-          dates[day.date].push(day);
-        } else {
-          dates[day.date] = [day];
-        }
+  useEffect(() => {
+    if (query) {
+      const dates = {};
+      const { habits } = query;
+      _.forEach(habits, (habit) => {
+        _.forEach(habit.days, (day) => {
+          if (day.date in dates) {
+            dates[day.date].push(day);
+          } else {
+            dates[day.date] = [day];
+          }
+        });
       });
+
+      setDates(dates);
+    }
+  }, [query]);
+
+  useEffect(() => {
+    const init = async () => {
+      await refetch();
+    };
+    init();
+  }, [newHabit, editedHabit, deletedHabit, habitDay]);
+
+  function RenderRateColumn(habitId) {
+    let blockCount = 0;
+    let activeBlockCount = 0;
+
+    _.forEach(selectedDates, (selectedDate) => {
+      if (dates[selectedDate]) {
+        const date = _.find(
+          dates[selectedDate],
+          (d) => d.habit._id === habitId
+        );
+
+        if (date) blockCount++;
+        if (date && date.checked) activeBlockCount++;
+      }
     });
 
-    setDates(() => dates);
-  }
+    const rate = Math.round((activeBlockCount / blockCount) * 100);
+    let bgColor =
+      rate === 100
+        ? '#e2c45a'
+        : rate >= 80
+        ? '#4ade80'
+        : rate >= 50
+        ? '#4290d8'
+        : '#F87171';
 
-  useEffect(() => {
-    if (habitData) {
-      const { habits } = habitData;
-      const newHabits = _.map(habits, (habit) =>
-        _.pick(habit, ['_id', 'name', 'color', 'days'])
-      );
-
-      setHabits(() => newHabits);
-      populateDates(habits);
-    }
-  }, [habitData]);
-
-  async function AddHabit(habit) {
-    try {
-      await addHabitMutation({
-        variables: { name: habit.name, color: habit.color },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  useEffect(() => {
-    if (newHabit) {
-      const { addHabit } = newHabit;
-      const today = dayjs().format('MM-DD-YYYY');
-      const datesClone = { ...dates };
-      if (datesClone[today]) {
-        datesClone[today].push(addHabit.days[0]);
-      } else {
-        datesClone[today] = [addHabit.days[0]];
-      }
-
-      setDates(() => datesClone);
-      setHabits((habits) => [...habits, addHabit]);
-    }
-  }, [newHabit]);
-
-  async function EditHabit(habit) {
-    try {
-      const { _id, name, color } = habit;
-      await editHabitMutation({ variables: { habitId: _id, name, color } });
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  useEffect(() => {
-    if (editedHabit) {
-      const {
-        editHabit: { _id, name, color },
-      } = editedHabit;
-
-      const habitsClone = [...habits];
-      const habit = _.find(habitsClone, (habit) => habit._id === _id);
-      habit.name = name;
-      habit.color = color;
-      setHabits(() => habitsClone);
-    }
-  }, [editedHabit]);
-
-  async function DeleteHabit(habit) {
-    try {
-      await deleteHabitMutation({ variables: { habitId: habit._id } });
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  useEffect(() => {
-    if (deletedHabit) {
-      const { deleteHabit } = deletedHabit;
-
-      const habitsClone = habits.filter(
-        (habit) => habit._id !== deleteHabit._id
-      );
-      setHabits(() => habitsClone);
-    }
-  }, [deletedHabit]);
-
-  async function handleDayCheck(day) {
-    try {
-      await checkHabitDayMutation({ variables: { dayId: day._id } });
-    } catch (error) {
-      console.log(error);
-    }
+    return (
+      <div className='flex items-center s-2 gap-2 col-span-2 p-2 ps-4 border'>
+        <div
+          className={'h-8 w-8 rounded-full'}
+          style={{ backgroundColor: bgColor }}
+        />
+        <p className='font-bold text-xl'>{rate}%</p>
+      </div>
+    );
   }
 
   function renderHabitDateRow(habit) {
@@ -201,7 +183,9 @@ const PixelTracker = () => {
                   key={day._id}
                   isActive={true}
                   day={day}
-                  onCheck={handleDayCheck}
+                  onCheck={async (day) => {
+                    await checkHabitDay({ variables: { dayId: day._id } });
+                  }}
                   color={day.checked ? habit.color : ''}
                 />
               );
@@ -213,9 +197,41 @@ const PixelTracker = () => {
           }
         })}
         {/* Right column */}
-        <div className='col-span-2 border cursor-pointer'></div>
+        {RenderRateColumn(habit._id)}
       </Fragment>
     );
+  }
+
+  function calculateAllBlockCount() {
+    let allBlockCount = 0;
+    let allActiveBlockCount = 0;
+
+    console.log(Object.values(dates));
+    _.forEach(Object.values(dates), (date) => {
+      allBlockCount += date.length;
+      _.forEach(date, (day) => {
+        if (day.checked) allActiveBlockCount++;
+      });
+    });
+
+    return [allActiveBlockCount, allBlockCount - allActiveBlockCount];
+  }
+
+  function renderDoughnutChart() {
+    const values = calculateAllBlockCount();
+    const data = {
+      labels: ['Completed number of habits', 'Incomplete number of habits'],
+      datasets: [
+        {
+          label: 'Completed/Incomplete number of habits',
+          data: values,
+          backgroundColor: ['rgb(54, 162, 235)', 'rgb(255, 99, 132)'],
+          hoverOffset: 4,
+        },
+      ],
+    };
+
+    return <Doughnut data={data} />;
   }
 
   return (
@@ -229,10 +245,16 @@ const PixelTracker = () => {
         {/* Left Panel */}
         <div
           onClick={() => handleWeekChange('left')}
-          className='flex flex-col gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100 cursor-pointer'
+          className='flex flex-col gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100'
+          style={{
+            backgroundColor: checkPossibleWeekChange('left')
+              ? ''
+              : 'rgb(241 245 249)',
+            cursor: checkPossibleWeekChange('left') ? 'pointer' : '',
+          }}
         >
           <div className='flex items-center gap-2 text-sm font-bold'>
-            {/* <ArrowIcon angle={90} /> */}
+            <ArrowIcon angle={90} />
             <p className='w-min'>Previous Week</p>
           </div>
           <p className='text-md font-bold self-center'>Habits</p>
@@ -260,15 +282,24 @@ const PixelTracker = () => {
         {/* Right Panel */}
         <div
           onClick={() => handleWeekChange('right')}
-          className='flex flex-col gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100 cursor-pointer'
+          className='flex flex-col gap-3 mt-2 p-3 col-span-2 border hover:bg-slate-100'
+          style={{
+            backgroundColor: checkPossibleWeekChange('right')
+              ? ''
+              : 'rgb(241 245 249)',
+            cursor: checkPossibleWeekChange('right') ? 'pointer' : '',
+          }}
         >
           <div className='flex items-center justify-end gap-2 text-sm font-bold'>
+            <ArrowIcon angle={-90} />
             <p className='w-min'>Next Week</p>
           </div>
           <p className='text-md font-bold self-center'>Rates</p>
         </div>
         {/* Body */}
-        {habits.map((habit) => renderHabitDateRow(habit))}
+        {dates &&
+          query &&
+          query.habits.map((habit) => renderHabitDateRow(habit))}
       </div>
       {/* MISC: */}
 
@@ -279,14 +310,28 @@ const PixelTracker = () => {
         Add Habit
       </button>
       {/* Absolute Components */}
-      <AddHabitForm toggle={toggle} setToggle={setToggle} AddHabit={AddHabit} />
+      <AddHabitForm
+        toggle={toggle}
+        setToggle={setToggle}
+        AddHabit={async (habit) => {
+          await addHabit({
+            variables: { name: habit.name, color: habit.color },
+          });
+        }}
+      />
       <EditHabitForm
         toggle={toggle}
         setToggle={setToggle}
         habit={selectedHabit}
-        EditHabit={EditHabit}
-        DeleteHabit={DeleteHabit}
+        EditHabit={async (habit) => {
+          const { _id, name, color } = habit;
+          await editHabit({ variables: { habitId: _id, name, color } });
+        }}
+        DeleteHabit={async (habit) => {
+          await deleteHabit({ variables: { habitId: habit._id } });
+        }}
       />
+      <div className='w-1/2 mx-auto'>{dates && renderDoughnutChart()}</div>
     </div>
   );
 };

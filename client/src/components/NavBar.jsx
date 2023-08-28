@@ -3,6 +3,7 @@ import ProfileIcon from '../images/ProfileIcon';
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../features/user';
+import { useApolloClient } from '@apollo/client';
 
 // eslint-disable-next-line react/prop-types
 const NavBar = ({ points }) => {
@@ -10,6 +11,7 @@ const NavBar = ({ points }) => {
   const [opacity, setOpacity] = useState(1);
   const user = useSelector((state) => state.user.value);
   const dispatch = useDispatch();
+  const client = useApolloClient();
 
   useEffect(() => {
     setOpacity(0);
@@ -21,7 +23,8 @@ const NavBar = ({ points }) => {
     return () => clearTimeout(timeoutId);
   }, [points]);
 
-  const onLogout = () => {
+  const onLogout = async () => {
+    await client.resetStore();
     localStorage.setItem('Authorization', '');
     dispatch(logout({}));
   };

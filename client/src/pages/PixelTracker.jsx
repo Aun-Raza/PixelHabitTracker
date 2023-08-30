@@ -6,12 +6,12 @@ import {
   EDIT_HABIT,
   DELETE_HABIT,
   CHECK_DAY,
-} from '../utils/graphql';
+} from '../utilstemp/graphql';
 import _ from 'lodash';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
-import { daysOfWeek, months } from '../utils/enum';
+import { daysOfWeek, months } from '../utilstemp/enum';
 import Cell from '../components/Cell';
 import AddHabitForm from '../components/AddHabitForm';
 import EditHabitForm from '../components/EditHabitForm';
@@ -20,7 +20,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 import { Doughnut } from 'react-chartjs-2';
 import ArrowIcon from '/public/ArrowIcon';
 import { useDispatch } from 'react-redux';
-import { incrementPoints, decrementPoints } from '../utils/feature';
+import { incrementPoints, decrementPoints } from '../utilstemp/feature';
 
 // eslint-disable-next-line react/prop-types
 const PixelTracker = () => {

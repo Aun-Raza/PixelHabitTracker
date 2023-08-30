@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setUser } from '../utils/feature';
+import { setUser } from '../utilstemp/feature';
 import { useMutation } from '@apollo/client';
-import { LOGIN_USER, REGISTER_USER } from '../utils/graphql';
+import { LOGIN_USER, REGISTER_USER } from '../utilstemp/graphql';
 
 // eslint-disable-next-line react/prop-types
 const Login = () => {

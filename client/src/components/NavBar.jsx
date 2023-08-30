@@ -2,7 +2,7 @@ import TrophyIcon from '/public/TrophyIcon';
 import ProfileIcon from '/public/ProfileIcon';
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { clearUser } from '../utils/feature';
+import { clearUser } from '../utilstemp/feature';
 import { useApolloClient } from '@apollo/client';
 
 // eslint-disable-next-line react/prop-types

@@ -1,5 +1,4 @@
 import { useState, Fragment, useEffect } from 'react';
-import dayjs from 'dayjs';
 import { useQuery, useMutation } from '@apollo/client';
 import {
   QUERY_ALL_HABITS,
@@ -7,19 +6,23 @@ import {
   EDIT_HABIT,
   DELETE_HABIT,
   CHECK_DAY,
-} from '../graphql/query';
+} from '../utils/graphql';
 import _ from 'lodash';
+import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
-import { daysOfWeek, months } from '../Utils/enum';
+import { daysOfWeek, months } from '../utils/enum';
 import Cell from '../components/Cell';
 import AddHabitForm from '../components/AddHabitForm';
 import EditHabitForm from '../components/EditHabitForm';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 ChartJS.register(ArcElement, Tooltip, Legend);
 import { Doughnut } from 'react-chartjs-2';
-import ArrowIcon from '../images/ArrowIcon';
+import ArrowIcon from '/public/ArrowIcon';
+import { useDispatch } from 'react-redux';
+import { incrementPoints, decrementPoints } from '../utils/feature';
 
+// eslint-disable-next-line react/prop-types
 const PixelTracker = () => {
   const [dates, setDates] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
@@ -30,6 +33,7 @@ const PixelTracker = () => {
   const [deleteHabit, { data: deletedHabit }] = useMutation(DELETE_HABIT);
   const [toggle, setToggle] = useState('none');
   const [selectedHabit, setSelectedHabit] = useState(null);
+  const dispatch = useDispatch();
 
   function handleWeekChange(direction) {
     if (direction === 'left') {
@@ -73,10 +77,11 @@ const PixelTracker = () => {
   }
 
   useEffect(() => {
-    const init = async () => {
+    async function init() {
       await refetch();
       populateSelectedDates(dayjs());
-    };
+    }
+
     init();
   }, []);
 
@@ -185,6 +190,8 @@ const PixelTracker = () => {
                   day={day}
                   onCheck={async (day) => {
                     await checkHabitDay({ variables: { dayId: day._id } });
+                    if (!day.checked) dispatch(incrementPoints());
+                    else dispatch(decrementPoints());
                   }}
                   color={day.checked ? habit.color : ''}
                 />
@@ -206,7 +213,6 @@ const PixelTracker = () => {
     let allBlockCount = 0;
     let allActiveBlockCount = 0;
 
-    console.log(Object.values(dates));
     _.forEach(Object.values(dates), (date) => {
       allBlockCount += date.length;
       _.forEach(date, (day) => {

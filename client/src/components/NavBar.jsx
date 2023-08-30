@@ -1,13 +1,12 @@
-import TrophyIcon from '../images/TrophyIcon';
-import ProfileIcon from '../images/ProfileIcon';
+import TrophyIcon from '/public/TrophyIcon';
+import ProfileIcon from '/public/ProfileIcon';
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../features/user';
+import { clearUser } from '../utils/feature';
 import { useApolloClient } from '@apollo/client';
 
 // eslint-disable-next-line react/prop-types
-const NavBar = ({ points }) => {
-  const [pointsValue, setPointsValue] = useState(points);
+const NavBar = () => {
   const [opacity, setOpacity] = useState(1);
   const user = useSelector((state) => state.user.value);
   const dispatch = useDispatch();
@@ -16,17 +15,16 @@ const NavBar = ({ points }) => {
   useEffect(() => {
     setOpacity(0);
     const timeoutId = setTimeout(() => {
-      setPointsValue(points);
       setOpacity(1);
     }, 500); // duration of the transition
 
     return () => clearTimeout(timeoutId);
-  }, [points]);
+  }, [user.points]);
 
-  const onLogout = async () => {
+  const logout = async () => {
     await client.resetStore();
     localStorage.setItem('Authorization', '');
-    dispatch(logout({}));
+    dispatch(clearUser());
   };
 
   return (
@@ -48,7 +46,7 @@ const NavBar = ({ points }) => {
               className='text-xl font-bold'
               style={{ transition: 'opacity 0.5s', opacity: opacity }}
             >
-              {pointsValue}
+              {user.points}
             </p>
           </div>
           <div className='flex items-center gap-2'>
@@ -57,7 +55,7 @@ const NavBar = ({ points }) => {
           </div>
           <button
             type='button'
-            onClick={onLogout}
+            onClick={logout}
             className='bg-blue-400 px-3 text-white font-mono rounded-md'
           >
             Logout

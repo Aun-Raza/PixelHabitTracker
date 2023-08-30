@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, Fragment, useEffect } from 'react';
-import BlurScreen from '../Utils/BlurScreen';
+import BlurScreen from './BlurScreen';
 
 // eslint-disable-next-line react/prop-types
 const EditHabitForm = ({

@@ -1,35 +1,25 @@
 import NavBar from './components/NavBar';
 import PixelTracker from './pages/PixelTracker';
-import { useEffect, useState } from 'react';
-import ProtectedRoute from './Utils/ProtectedRoute';
-import jwt_decode from 'jwt-decode';
+import ProtectedRoute from './components/ProtectedRoute';
 import { useDispatch } from 'react-redux';
-import { login } from './features/user';
+import { setUser } from './utils/feature';
+import { useQuery } from '@apollo/client';
+import { QUERY_USER } from './utils/graphql';
 
 function App() {
-  const [points, setPoints] = useState(0);
   const dispatch = useDispatch();
+  const { data: userData } = useQuery(QUERY_USER);
 
-  useEffect(() => {
-    const token = localStorage.getItem('Authorization');
-    if (!token) return;
-
-    const decoded = jwt_decode(token);
-    if (!decoded) return;
-
-    dispatch(login({ username: decoded.username, points: 0 }));
-  }, []);
-
-  function handlePointChange(newPoints) {
-    const totalPoints = points + newPoints;
-    setPoints(totalPoints);
+  if (userData) {
+    const { username, points } = userData.user;
+    dispatch(setUser({ username, points }));
   }
 
   return (
     <div className='App mx-auto'>
-      <NavBar points={points} />
+      <NavBar />
       <ProtectedRoute>
-        <PixelTracker onPointChange={handlePointChange} />
+        <PixelTracker />
       </ProtectedRoute>
     </div>
   );

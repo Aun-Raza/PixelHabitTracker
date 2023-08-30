@@ -1,50 +1,44 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../features/user';
+import { setUser } from '../utils/feature';
 import { useMutation } from '@apollo/client';
-import { LOGIN_USER, REGISTER_USER } from '../graphql/query';
+import { LOGIN_USER, REGISTER_USER } from '../utils/graphql';
 
+// eslint-disable-next-line react/prop-types
 const Login = () => {
-  const [usernameState, setUsername] = useState('');
-  const [passwordState, setPassword] = useState('');
-  const [loginGraphQL, { data: loginData }] = useMutation(LOGIN_USER);
-  const [registerGraphQL, { data: registerData }] = useMutation(REGISTER_USER);
-  const dispatch = useDispatch();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [login, { data: loginData }] = useMutation(LOGIN_USER);
+  const [register, { data: registerData }] = useMutation(REGISTER_USER);
   const [mode, setMode] = useState('Login');
+  const dispatch = useDispatch();
 
   async function handleSubmit(ev) {
     ev.preventDefault();
 
-    try {
-      if (mode === 'Login') {
-        await loginGraphQL({
-          variables: {
-            input: { username: usernameState, password: passwordState },
-          },
-        });
-      } else {
-        await registerGraphQL({
-          variables: {
-            input: { username: usernameState, password: passwordState },
-          },
-        });
-      }
-    } catch (error) {
-      console.log(error.message);
+    if (mode === 'Login') {
+      await login({
+        variables: {
+          input: { username, password },
+        },
+      });
+    } else if (mode === 'Register') {
+      await register({
+        variables: {
+          input: { username, password },
+        },
+      });
     }
   }
 
-  if (loginData) {
-    const { username, points, token, habits } = loginData.login;
-    localStorage.setItem('Authorization', token);
-    dispatch(login({ username, points, habits }));
-  }
-
-  if (registerData) {
-    const { username, points, token, habits } = registerData.register;
-    localStorage.setItem('Authorization', token);
-    dispatch(login({ username, points, habits }));
-  }
+  useEffect(() => {
+    if (loginData || registerData) {
+      const { username, points, token } =
+        loginData?.login || registerData.register;
+      localStorage.setItem('Authorization', token);
+      dispatch(setUser({ username, points }));
+    }
+  }, [loginData, registerData]);
 
   return (
     <div className='flex min-h-full flex-col justify-center p-6 lg:px-8'>
@@ -67,7 +61,7 @@ const Login = () => {
                 id='username'
                 name='username'
                 type='username'
-                value={usernameState}
+                value={username}
                 onChange={(ev) => setUsername(ev.target.value)}
                 autoComplete='username'
                 required
@@ -90,7 +84,7 @@ const Login = () => {
                 id='password'
                 name='password'
                 type='password'
-                value={passwordState}
+                value={password}
                 onChange={(ev) => setPassword(ev.target.value)}
                 autoComplete='current-password'
                 required

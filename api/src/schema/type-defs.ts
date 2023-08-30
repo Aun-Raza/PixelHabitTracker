@@ -39,8 +39,10 @@ const typeDefs = gql`
   }
 
   type Query {
+    user: User
     users: [User!]!
     habits: [Habit!]
+    points: Int!
   }
 
   type Mutation {

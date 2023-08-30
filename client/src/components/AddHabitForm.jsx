@@ -1,5 +1,5 @@
 import { useState, Fragment } from 'react';
-import BlurScreen from '../Utils/BlurScreen';
+import BlurScreen from './BlurScreen';
 
 // eslint-disable-next-line react/prop-types
 const AddHabitForm = ({ toggle, setToggle, AddHabit }) => {

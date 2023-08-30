@@ -20,6 +20,7 @@ dayjs.extend(customParseFormat);
 dotenv.config();
 const saltRounds = 5;
 const salt = bcrypt.genSaltSync(saltRounds);
+const POINT = 1;
 
 const resolvers = {
   Query: {
@@ -30,6 +31,17 @@ const resolvers = {
       return _.map(allUsers, (user) =>
         _.pick(user, ['_id', 'username', 'points', 'habits'])
       );
+    },
+
+    user: async (parent: any, args: null, { user }: IContextWithUser) => {
+      await connectToDb();
+      const foundUser = await UserModel.findById(user._id);
+
+      if (!foundUser) {
+        throw new GraphQLError(`${user.username} cannot be found`);
+      }
+
+      return _.pick(foundUser, ['_id', 'username', 'points', 'habits']);
     },
 
     habits: async (parent: any, args: null, { user }: IContextWithUser) => {
@@ -43,6 +55,11 @@ const resolvers = {
 
       const allUpdatedHabits = await HabitModel.find({ owner: user._id });
       return allUpdatedHabits;
+    },
+
+    points: async (parent: any, args: null, { user }: IContextWithUser) => {
+      const userDoc = await UserModel.findById(user._id);
+      return userDoc?.points;
     },
   },
 
@@ -200,6 +217,15 @@ const resolvers = {
 
       dayDoc.checked = !dayDoc.checked;
       await dayDoc.save();
+
+      const userDoc = await UserModel.findById(user._id);
+
+      if (!userDoc) {
+        throw new GraphQLError(`user does not exist`);
+      }
+
+      userDoc.points += dayDoc.checked ? POINT : -POINT;
+      await userDoc.save();
 
       return _.pick(dayDoc, ['_id', 'date', 'habit', 'checked']);
     },

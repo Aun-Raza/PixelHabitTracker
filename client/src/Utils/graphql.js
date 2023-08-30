@@ -9,6 +9,15 @@ export const QUERY_ALL_USERS = gql`
   }
 `;
 
+export const QUERY_USER = gql`
+  query GetUser {
+    user {
+      username
+      points
+    }
+  }
+`;
+
 export const QUERY_ALL_HABITS = gql`
   query habits {
     habits {
@@ -89,6 +98,12 @@ export const LOGIN_USER = gql`
         }
       }
     }
+  }
+`;
+
+export const GET_POINTS = gql`
+  query points {
+    points
   }
 `;
 

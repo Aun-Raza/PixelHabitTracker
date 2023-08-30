@@ -2,9 +2,9 @@ import NavBar from './components/NavBar';
 import PixelTracker from './pages/PixelTracker';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useDispatch } from 'react-redux';
-import { setUser } from './utilstemp/feature';
+import { setUser } from './utils/feature';
 import { useQuery } from '@apollo/client';
-import { QUERY_USER } from './utilstemp/graphql';
+import { QUERY_USER } from './utils/graphql';
 
 function App() {
   const dispatch = useDispatch();

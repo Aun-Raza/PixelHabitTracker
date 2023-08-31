@@ -259,7 +259,7 @@ const PixelTracker = () => {
             cursor: checkPossibleWeekChange('left') ? 'pointer' : '',
           }}
         >
-          <div className='flex items-center gap-2 text-sm font-bold'>
+          <div className='flex items-center text-sm font-bold'>
             <ArrowIcon angle={90} />
             <p className='w-min'>Previous Week</p>
           </div>
@@ -296,7 +296,7 @@ const PixelTracker = () => {
             cursor: checkPossibleWeekChange('right') ? 'pointer' : '',
           }}
         >
-          <div className='flex items-center justify-end gap-2 text-sm font-bold'>
+          <div className='flex items-center justify-end text-sm font-bold'>
             <ArrowIcon angle={-90} />
             <p className='w-min'>Next Week</p>
           </div>

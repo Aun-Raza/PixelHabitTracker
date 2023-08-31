@@ -7,7 +7,7 @@ const ArrowIcon = ({ angle }) => {
       version='1.1'
       viewBox='0 0 512 512'
       width='512px'
-      className='w-8 h-8 hidden sm:block'
+      className='w-8 h-8 sm:block'
       xmlSpace='preserve'
       xmlns='http://www.w3.org/2000/svg'
     >

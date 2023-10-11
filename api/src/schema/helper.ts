@@ -6,7 +6,7 @@ import { GraphQLError } from 'graphql';
 dayjs.extend(customParseFormat);
 
 export async function updateHabitDays(habit: IHabitWithDays) {
-  const { name, days } = habit;
+  const { days } = habit;
   if (!days.length) {
     const today = dayjs().format('MM-DD-YYYY');
     await addDays(habit._id!.toString(), today);
@@ -14,7 +14,8 @@ export async function updateHabitDays(habit: IHabitWithDays) {
     const lastDate = days[days.length - 1].date;
     const jsDate = dayjs(lastDate, 'MM-DD-YYYY');
     if (!jsDate.isSame(dayjs(), 'day')) {
-      await addDays(habit._id!.toString(), lastDate);
+      const lastDateAfter = jsDate.add(1, 'day').format('MM-DD-YYYY');
+      await addDays(habit._id!.toString(), lastDateAfter);
     }
   }
 }

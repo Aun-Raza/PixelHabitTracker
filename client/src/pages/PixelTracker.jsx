@@ -240,6 +240,10 @@ const PixelTracker = () => {
     return <Doughnut data={data} />;
   }
 
+  if (!query) return <p className='text-4xl w-fit mx-auto mt-14'>Loading...</p>;
+
+  console.log('PixelTracker');
+
   return (
     <div className='mt-11 container mx-auto'>
       <div

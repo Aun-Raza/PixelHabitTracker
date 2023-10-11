@@ -102,15 +102,26 @@ const Login = () => {
             </button>
           </div>
           {mode === 'Login' && (
-            <p
-              className='text-sm cursor-pointer'
-              onClick={() => setMode('Register')}
-            >
-              Don&apos;t have an account?{' '}
-              <span className='text-lg font-mono uppercase underline text-blue-800'>
-                Register
-              </span>
-            </p>
+            <div>
+              <div className='p-3 text-sm border flex flex-col gap-1'>
+                <h2 className='font-bold underline'>Demo Account</h2>
+                <p>
+                  Username: <span className='font-semibold'>john</span>
+                </p>
+                <p>
+                  Password: <span className='font-semibold'>demo</span>
+                </p>
+              </div>
+              <p
+                className='text-sm cursor-pointer'
+                onClick={() => setMode('Register')}
+              >
+                Don&apos;t have an account?{' '}
+                <span className='text-lg font-mono uppercase underline text-blue-800'>
+                  Register
+                </span>
+              </p>
+            </div>
           )}
           {mode === 'Register' && (
             <p

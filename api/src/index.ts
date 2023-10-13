@@ -5,7 +5,12 @@ import { typeDefs } from './schema/type-defs';
 import { resolvers } from './schema/resolvers';
 import { context } from './schema/context';
 
-const server = new ApolloServer({ typeDefs, resolvers, context });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context,
+  persistedQueries: false,
+});
 const { PORT } = process.env;
 
 server.listen(PORT).then(({ url }) => {
